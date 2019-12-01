@@ -1,36 +1,15 @@
 # advent-2019
 
-FIXME: description
-
-## Installation
-
-Download from http://example.com/FIXME.
+Advent of Code solutions in clojure.
+I'm a complete clojure noob so I'll only keep it up for as long as I manage.
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar advent-2019-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+Clone the repository, select the day in `project.clj` and run `lein run` to run that day. 
 
 ## License
 
-Copyright © 2019 FIXME
+Copyright © 2019 Fleur Kelpin
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
