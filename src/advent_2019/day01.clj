@@ -22,6 +22,5 @@
   (reduce + (map total-fuel input)))
 
 (defn -main
-  "Call the method of the day"
   [& args]
   (println [part1, part2]))
