@@ -19,10 +19,11 @@
 (defn run
   [program, ip]
   "Runs the program to completion"
+  (loop [program program ip ip]
   (let [ opcode (get program ip) ]
     (if (= opcode 99)
       (get program 0)
-      (run (mutate program ip) (+ ip 4)))))
+        (recur (mutate program ip) (+ ip 4))))))
 
 (defn run-with-input
   [noun, verb]
