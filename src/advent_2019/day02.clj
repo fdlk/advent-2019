@@ -6,10 +6,9 @@
 (defn mutate
   [program, ip]
   "Returns updated program"
-  (let [ opcode (get program ip)
-         op1 (get program (get program (+ ip 1)))
-         op2 (get program (get program (+ ip 2)))
-         target (get program (+ ip 3))]
+  (let [ [opcode op1index op2index target] (take 4 (drop ip program))
+         op1 (get program op1index)
+         op2 (get program op2index) ]
     (case opcode 
       1 (assoc program target (+ op1 op2))
       2 (assoc program target (* op1 op2)))))
@@ -26,7 +25,10 @@
 (defn run-with-input
   [noun, verb]
   "Runs the program with given input"
-  (run (assoc (assoc input 1 noun) 2 verb) 0))
+  (-> input
+    (assoc 1 noun)
+    (assoc 2 verb)
+    (run 0)))
 
 (def part1 (run-with-input 12 2))
 
