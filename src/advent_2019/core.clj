@@ -17,6 +17,6 @@
   [name]
   "reads lines from a resource"
   (->> name
-    (resource)
-    (slurp)
-    (split-lines)))
+       (resource)
+       (slurp)
+       (split-lines)))
