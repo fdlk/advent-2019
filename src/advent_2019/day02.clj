@@ -31,8 +31,8 @@
 (def part1 (run-with-input 12 2))
 
 (def part2 
-  (for [noun (range 99) 
-        verb (range 99)
+  (for [noun (range 100) 
+        verb (range 100)
         :let [result (run-with-input noun verb)] 
         :when (= result 19690720)] 
         (+ (* 100 noun) verb)))
