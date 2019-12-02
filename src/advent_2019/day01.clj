@@ -1,25 +1,36 @@
 (ns advent-2019.day01
-  (:require [clojure.string :refer [split-lines]])
-  (:require [advent-2019.core :refer [parse-int]]))
+  (:require [advent-2019.core :refer [parse-int sum lines]]))
 
 (def input
-  (map parse-int (split-lines (slurp "resources/day01.txt"))))
+  (->> "day01.txt"
+    (lines)
+    (map parse-int)))
 
 (defn fuel
   [mass]
   "Determines how much fuel is needed to launch a given mass"
-  (- (quot mass 3) 2))
+  (-> mass
+    (quot 3)
+    (- 2)))
 
 (def part1
-  (reduce + (map fuel input)))
+  (->> input
+    (map fuel)
+    (sum)))
 
 (defn total-fuel
   [mass]
   "Determines how much fuel is needed to launch a given mass plus its fuel"
-  (reduce + (take-while pos? (rest (iterate fuel mass)))))
+  (->> mass
+    (iterate fuel)
+    (rest)
+    (take-while pos?)
+    (sum)))
 
 (def part2
-  (reduce + (map total-fuel input)))
+  (->> input
+    (map total-fuel)
+    (sum)))
 
 (defn -main
   [& args]
