@@ -39,6 +39,17 @@
         :when (= result 19690720)]
     (+ (* 100 noun) verb)))
 
+(def part2-alternative
+  ; assume the outcome is linear in both noun and verb
+  ; and that noun > verb
+  (let [const (run-with-input 0 0)
+        per-noun (- (run-with-input 1 0) const)
+        per-verb (- (run-with-input 0 1) const)
+        diff (- 19690720 const)
+        noun (quot diff per-noun)
+        verb (quot (- diff (* noun per-noun)) per-verb)]
+        (+ (* 100 noun) verb)))
+
 (defn -main
   [& args]
-  (println part1 part2))
+  (println part1 part2 part2-alternative))
