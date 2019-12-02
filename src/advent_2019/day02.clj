@@ -20,9 +20,9 @@
   [program, ip]
   "Runs the program to completion"
   (loop [program program ip ip]
-  (let [ opcode (get program ip) ]
-    (if (= opcode 99)
-      (get program 0)
+    (let [ opcode (get program ip) ]
+      (if (= opcode 99)
+        (get program 0)
         (recur (mutate program ip) (+ ip 4))))))
 
 (defn run-with-input
@@ -30,6 +30,15 @@
   "Runs the program with given input"
   (run (assoc (assoc input 1 noun) 2 verb) 0))
 
+(def part1 (run-with-input 12 2))
+
+(def part2 
+  (for [noun (range 99) 
+        verb (range 99)
+        :let [result (run-with-input noun verb)] 
+        :when (= result 19690720)] 
+        (+ (* 100 noun) verb)))
+
 (defn -main
   [& args]
-  (println (run-with-input 12 2)))
+  (println part1 part2))
