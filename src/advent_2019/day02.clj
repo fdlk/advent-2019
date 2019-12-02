@@ -6,9 +6,9 @@
 (defn mutate
   [program, ip]
   "Returns updated program"
-  (let [[opcode op1index op2index target] (take 4 (drop ip program))
-        op1 (get program op1index)
-        op2 (get program op2index)]
+  (let [[opcode op1index op2index target] (subvec program ip)
+        op1 (nth program op1index)
+        op2 (nth program op2index)]
     (case opcode
       1 (assoc program target (+ op1 op2))
       2 (assoc program target (* op1 op2)))))
@@ -17,7 +17,7 @@
   [program, ip]
   "Runs the program to completion"
   (loop [program program ip ip]
-    (let [opcode (get program ip)]
+    (let [opcode (nth program ip)]
       (if (= opcode 99)
         (get program 0)
         (recur (mutate program ip) (+ ip 4))))))
