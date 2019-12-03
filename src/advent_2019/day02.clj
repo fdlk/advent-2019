@@ -48,7 +48,7 @@
         diff (- 19690720 const)
         noun (quot diff per-noun)
         verb (quot (- diff (* noun per-noun)) per-verb)]
-        (+ (* 100 noun) verb)))
+    (+ (* 100 noun) verb)))
 
 (defn -main
   [& args]
