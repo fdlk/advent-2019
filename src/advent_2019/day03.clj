@@ -2,11 +2,6 @@
   (:require [clojure.string :refer [split]])
   (:require [advent-2019.core :refer [lines parse-int sum]]))
 
-(defn parse-line
-  "Parses input line"
-  [line]
-  (split line #","))
-
 (defn reducer
   "Reducer for the segments"
   [point, segment]
@@ -18,15 +13,19 @@
       \U (assoc point :y (+ (:y point) length))
       \D (assoc point :y (- (:y point) length)))))
 
+(def central-port {:x 0 :y 0})
+
 (defn segments
   "Creates line segments for wire input"
   [wire]
-  (partition 2 1 (reductions reducer {:x 0 :y 0} wire)))
+  (->> wire
+       (reductions reducer central-port)
+       (partition 2 1)))
 
 (def input
   (->> "day03.txt"
        (lines)
-       (map parse-line)
+       (map #(split %1 #","))
        (map segments)))
 
 (def wire1 (first input))
@@ -49,7 +48,7 @@
   (= (:x from) (:x to)))
 
 (defn intersect-internal
-  "Determines if the line through s2 lies within s1"
+  "Determines if the line through s2 intersects with s1"
   [s1, s2]
   (or
    (and
@@ -89,7 +88,7 @@
          s2 wire2
          :when (intersect s1 s2)
          :let [crossing (intersection s1 s2)]]
-     (manhattan crossing {:x 0 :y 0}))))
+     (manhattan crossing central-port))))
 
 (def part2
   (reduce
