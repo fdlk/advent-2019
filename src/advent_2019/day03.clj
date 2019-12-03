@@ -2,8 +2,8 @@
   (:require [clojure.string :refer [split]])
   (:require [advent-2019.core :refer [lines parse-int sum]]))
 
-(defn reducer
-  "Reducer for the segments"
+(defn segment-end
+  "Gets the endpoint for a segment starting in point"
   [point, segment]
   (let [direction (first segment)
         length (parse-int (subs segment 1))]
@@ -19,7 +19,7 @@
   "Creates line segments for wire input"
   [wire]
   (->> wire
-       (reductions reducer central-port)
+       (reductions segment-end central-port)
        (partition 2 1)))
 
 (def input
