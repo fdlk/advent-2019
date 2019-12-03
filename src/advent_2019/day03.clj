@@ -1,6 +1,6 @@
 (ns advent-2019.day03
   (:require [clojure.string :refer [split]])
-  (:require [advent-2019.core :refer [lines parse-int]]))
+  (:require [advent-2019.core :refer [lines parse-int sum]]))
 
 (defn parse-line
   "Parses input line"
@@ -28,6 +28,9 @@
        (lines)
        (map parse-line)
        (map segments)))
+
+(def wire1 (first input))
+(def wire2 (first (rest input)))
 
 (defn contains
   "Determines if a range of numbers strictly contains a number"
@@ -73,16 +76,37 @@
     {:x (:x (first s1)) :y (:y (first s2))}))
 
 (defn manhattan
-  "Determines the manhattan distance to the central port"
-  [p]
-  (+ (Math/abs (:x p)) (Math/abs (:y p))))
+  "Determines the manhattan distance between two points"
+  [p1 p2]
+  (+
+   (Math/abs (- (:x p1) (:x p2)))
+   (Math/abs (- (:y p1) (:y p2)))))
+
+(def part1
+  (reduce
+   min
+   (for [s1 wire1
+         s2 wire2
+         :when (intersect s1 s2)
+         :let [crossing (intersection s1 s2)]]
+     (manhattan crossing {:x 0 :y 0}))))
+
+(def part2
+  (reduce
+   min
+   (for [index1 (range (count wire1))
+         index2 (range (count wire2))
+         :let [s1 (nth wire1 index1)
+               s2 (nth wire2 index2)]
+         :when (intersect s1 s2)
+         :let [crossing (intersection s1 s2)
+               segs (concat (take index1 wire1)
+                            [[(first s1) crossing]]
+                            (take index2 wire2)
+                            [[(first s2) crossing]])
+               lengths (map #(apply manhattan %1) segs)]]
+     (sum lengths))))
 
 (defn -main
   [& args]
-  (let [[wire1 wire2] input]
-    (println
-     (reduce min (for [s1 wire1
-                       s2 wire2
-                       :when (intersect s1 s2)
-                       :let [crossing (intersection s1 s2)]]
-                   (manhattan crossing))))))
+  (println part1 part2))
