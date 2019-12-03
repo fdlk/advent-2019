@@ -50,15 +50,13 @@
 (defn intersect-internal
   "Determines if the line through s2 intersects with s1"
   [s1, s2]
-  (or
-   (and
-    (is-vertical s1)
-    (is-horizontal s2)
-    (contains (map :y s1) (:y (first s2))))
-   (and
-    (is-horizontal s1)
-    (is-vertical s2)
-    (contains (map :x s1) (:x (first s2))))))
+  (if (is-vertical s1)
+    (and
+     (is-horizontal s2)
+     (contains (map :y s1) (:y (first s2))))
+    (and
+     (is-vertical s2)
+     (contains (map :x s1) (:x (first s2))))))
 
 (defn intersect
   "Determines if two segments intersect"
@@ -93,18 +91,15 @@
 (def part2
   (reduce
    min
-   (for [index1 (range (count wire1))
-         index2 (range (count wire2))
-         :let [s1 (nth wire1 index1)
-               s2 (nth wire2 index2)]
+   (for [[index1 s1] (map vector (range) wire1)
+         [index2 s2] (map vector (range) wire2)
          :when (intersect s1 s2)
          :let [crossing (intersection s1 s2)
                segs (concat (take index1 wire1)
                             [[(first s1) crossing]]
                             (take index2 wire2)
-                            [[(first s2) crossing]])
-               lengths (map #(apply manhattan %1) segs)]]
-     (sum lengths))))
+                            [[(first s2) crossing]])]]
+     (sum (map #(apply manhattan %1) segs)))))
 
 (defn -main
   [& args]
