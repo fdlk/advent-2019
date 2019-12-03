@@ -69,8 +69,8 @@
   "Determines the intersection of two segments, given that they intersect"
   [s1, s2]
   (if (is-horizontal s1)
-    {:x (:x (first s2)) :y (:y (first s1))})
-  {:x (:x (first s1)) :y (:y (first s2))})
+    {:x (:x (first s2)) :y (:y (first s1))}
+    {:x (:x (first s1)) :y (:y (first s2))}))
 
 (defn manhattan
   "Determines the manhattan distance to the central port"
