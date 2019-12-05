@@ -10,14 +10,17 @@
 
 (defn halt [program] (get program 0))
 
-(defn add-mult
+(defn compute-and-set
   [program, ip]
   (let [[instruction op1 op2 target] (subvec program ip)
         value1 (operand-value op1 (parameter-mode instruction 0) program)
-        value2 (operand-value op2 (parameter-mode instruction 1) program)]
-    (case (opcode instruction)
-      1 [(assoc program target (+ value1 value2)) (+ ip 4)]
-      2 [(assoc program target (* value1 value2)) (+ ip 4)])))
+        value2 (operand-value op2 (parameter-mode instruction 1) program)
+        value-to-set (case (opcode instruction)
+                       1 (+ value1 value2)
+                       2 (* value1 value2)
+                       7 (if (< value1 value2) 1 0)
+                       8 (if (= value1 value2) 1 0))]
+    [(assoc program target value-to-set) (+ ip 4)]))
 
 (defn read-input
   [program, ip, sys-id]
@@ -41,15 +44,6 @@
                   6 (= value1 0))]
     [program (if do-jump value2 (+ ip 3))]))
 
-(defn cmp
-  [program, ip]
-  (let [[instruction op1 op2 target] (subvec program ip)
-        value1 (operand-value op1 (parameter-mode instruction 0) program)
-        value2 (operand-value op2 (parameter-mode instruction 1) program)]
-    (case (opcode instruction)
-      7 [(assoc program target (if (< value1 value2) 1 0)) (+ ip 4)]
-      8 [(assoc program target (if (= value1 value2) 1 0)) (+ ip 4)])))
-
 (defn run
   "Runs the program to completion"
   [p0, ip0, sys-id]
@@ -57,14 +51,14 @@
     (let [[program ip] state]
       (case (opcode (get program ip))
         99 (halt program)
-        1 (recur (add-mult program ip))
-        2 (recur (add-mult program ip))
+        1 (recur (compute-and-set program ip))
+        2 (recur (compute-and-set program ip))
         3 (recur (read-input program ip sys-id))
         4 (recur (do-output program ip))
         5 (recur (jmp program ip))
         6 (recur (jmp program ip))
-        7 (recur (cmp program ip))
-        8 (recur (cmp program ip))))))
+        7 (recur (compute-and-set program ip))
+        8 (recur (compute-and-set program ip))))))
 
 (defn -main [& args]
   (run input 0 1)
