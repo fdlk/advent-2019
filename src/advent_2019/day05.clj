@@ -15,35 +15,57 @@
   (let [[instruction op1 op2 target] (subvec program ip)
         value1 (operand-value op1 (parameter-mode instruction 0) program)
         value2 (operand-value op2 (parameter-mode instruction 1) program)]
-    (println "add-mult" value1 value2 ip)
     (case (opcode instruction)
       1 [(assoc program target (+ value1 value2)) (+ ip 4)]
       2 [(assoc program target (* value1 value2)) (+ ip 4)])))
 
 (defn read-input
-  [program, ip]
+  [program, ip, sys-id]
   (let [[_ target] (subvec program ip)]
-    [(assoc program target 1) (+ ip 2)]))
+    [(assoc program target sys-id) (+ ip 2)]))
 
 (defn do-output
   [program, ip]
   (let [[instruction op] (subvec program ip)
         value (operand-value op (parameter-mode instruction 0) program)]
-      (println ">" value)
-      [program (+ ip 2)]))
+    (println ">" value)
+    [program (+ ip 2)]))
+
+(defn jmp
+  [program, ip]
+  (let [[instruction op1 op2] (subvec program ip)
+        value1 (operand-value op1 (parameter-mode instruction 0) program)
+        value2 (operand-value op2 (parameter-mode instruction 1) program)
+        do-jump (case (opcode instruction)
+                  5 (not= value1 0)
+                  6 (= value1 0))]
+    [program (if do-jump value2 (+ ip 3))]))
+
+(defn cmp
+  [program, ip]
+  (let [[instruction op1 op2 target] (subvec program ip)
+        value1 (operand-value op1 (parameter-mode instruction 0) program)
+        value2 (operand-value op2 (parameter-mode instruction 1) program)]
+    (case (opcode instruction)
+      7 [(assoc program target (if (< value1 value2) 1 0)) (+ ip 4)]
+      8 [(assoc program target (if (= value1 value2) 1 0)) (+ ip 4)])))
 
 (defn run
   "Runs the program to completion"
-  [p0, ip0]
+  [p0, ip0, sys-id]
   (loop [state [p0 ip0]]
     (let [[program ip] state]
       (case (opcode (get program ip))
         99 (halt program)
         1 (recur (add-mult program ip))
         2 (recur (add-mult program ip))
-        3 (recur (read-input program ip))
-        4 (recur (do-output program ip))))))
+        3 (recur (read-input program ip sys-id))
+        4 (recur (do-output program ip))
+        5 (recur (jmp program ip))
+        6 (recur (jmp program ip))
+        7 (recur (cmp program ip))
+        8 (recur (cmp program ip))))))
 
-(defn -main
-  [& args]
-  (println (run input 0)))
+(defn -main [& args]
+  (run input 0 1)
+  (run input 0 5))
