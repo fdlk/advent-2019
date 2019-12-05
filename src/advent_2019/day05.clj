@@ -6,9 +6,9 @@
 
 (defn opcode [instruction] (mod instruction 100))
 (defn parameter-mode [instruction index] (rem (quot instruction (expt 10 (+ index 2))) 10))
-(defn operand-value [operand mode program] (if (= mode 0) (get program operand) operand))
+(defn operand-value [operand mode program] (if (= mode 0) (program operand) operand))
 
-(defn halt [program] (get program 0))
+(defn halt [program] (program 0))
 
 (defn compute-and-set
   [program, ip]
@@ -49,7 +49,7 @@
   [p0, ip0, sys-id]
   (loop [state [p0 ip0]]
     (let [[program ip] state]
-      (case (opcode (get program ip))
+      (case (opcode (program ip))
         99 (halt program)
         1 (recur (compute-and-set program ip))
         2 (recur (compute-and-set program ip))
