@@ -6,7 +6,7 @@
   :dependencies [
     [org.clojure/clojure "1.10.0"]
     [org.clojure/math.numeric-tower "0.0.4"]]
-  :main ^:skip-aot advent-2019.day05
+  :main ^:skip-aot advent-2019.day06
   :target-path "target/%s"
   :plugins [[lein-cljfmt "0.6.6"]]
   :profiles {:uberjar {:aot :all}})
