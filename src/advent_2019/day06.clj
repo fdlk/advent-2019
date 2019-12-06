@@ -8,5 +8,14 @@
        (map #(split % #"\)"))
        (reduce (fn [coll [v k]] (assoc coll k v)) {})))
 
+(defn orbits-to-center
+  [object-id]
+  (->>
+   (iterate input object-id)
+   (take-while #(not= % "COM"))
+   (count)))
+
+(def part1 (sum (map orbits-to-center (keys input))))
+
 (defn -main [& args]
-  (println (input "ZL4")))
+  (println part1))
