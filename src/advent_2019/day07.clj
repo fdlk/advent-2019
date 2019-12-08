@@ -2,7 +2,7 @@
   (:require [clojure.math.numeric-tower :refer [expt]]))
 
 (def input
-  [3,8,1001,8,10,8,105,1,0,0,21,42,67,84,97,118,199,280,361,442,99999,3,9,101,4,9,9,102,5,9,9,101,2,9,9,1002,9,2,9,4,9,99,3,9,101,5,9,9,102,5,9,9,1001,9,5,9,102,3,9,9,1001,9,2,9,4,9,99,3,9,1001,9,5,9,1002,9,2,9,1001,9,5,9,4,9,99,3,9,1001,9,5,9,1002,9,3,9,4,9,99,3,9,102,4,9,9,101,4,9,9,102,2,9,9,101,3,9,9,4,9,99,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,2,9,9,4,9,99,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,101,2,9,9,4,9,99,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,99,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,101,1,9,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,2,9,4,9,99])
+  [3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0])
 
 (defn opcode [instruction] (mod instruction 100))
 (defn parameter-mode [instruction index] (rem (quot instruction (expt 10 (+ index 2))) 10))
@@ -46,19 +46,19 @@
 
 (defn run
   "Runs the program to completion"
-  [p0, ip0, sys-id]
-  (loop [state [p0 ip0]]
+  [p0, ip0, inputs0]
+  (loop [state [p0 ip0] inputs inputs0]
     (let [[program ip] state]
       (case (opcode (program ip))
         99 (halt program)
-        1 (recur (compute-and-set program ip))
-        2 (recur (compute-and-set program ip))
-        3 (recur (read-input program ip sys-id))
-        4 (recur (do-output program ip))
-        5 (recur (jmp program ip))
-        6 (recur (jmp program ip))
-        7 (recur (compute-and-set program ip))
-        8 (recur (compute-and-set program ip))))))
+        1 (recur (compute-and-set program ip) inputs)
+        2 (recur (compute-and-set program ip) inputs)
+        3 (recur (read-input program ip (first inputs)) (rest inputs))
+        4 (recur (do-output program ip) inputs)
+        5 (recur (jmp program ip) inputs)
+        6 (recur (jmp program ip) inputs)
+        7 (recur (compute-and-set program ip) inputs)
+        8 (recur (compute-and-set program ip) inputs)))))
 
 (defn -main [& args]
-  (run input 0 0))
+  (run input 0 [0 4]))
