@@ -6,7 +6,13 @@
        (lines)
        (first)
        (map int)
-       (map #(- % (int \0)))))
+       (map #(- % (int \0)))
+       (partition (* 25 6))))
+
+(def part1 (->> input
+                (map frequencies)
+                (sort-by #(get % 0))
+                (first)))
 
 (defn -main [& args]
-(println input))
+  (println (* (get part1 1) (get part1 2))))
