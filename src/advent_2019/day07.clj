@@ -1,14 +1,13 @@
 (ns advent-2019.day07
+  (:require [clojure.math.combinatorics :as combo])
   (:require [clojure.math.numeric-tower :refer [expt]]))
 
 (def input
-  [3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0])
+  [3,8,1001,8,10,8,105,1,0,0,21,42,67,84,97,118,199,280,361,442,99999,3,9,101,4,9,9,102,5,9,9,101,2,9,9,1002,9,2,9,4,9,99,3,9,101,5,9,9,102,5,9,9,1001,9,5,9,102,3,9,9,1001,9,2,9,4,9,99,3,9,1001,9,5,9,1002,9,2,9,1001,9,5,9,4,9,99,3,9,1001,9,5,9,1002,9,3,9,4,9,99,3,9,102,4,9,9,101,4,9,9,102,2,9,9,101,3,9,9,4,9,99,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,2,9,9,4,9,99,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,101,2,9,9,4,9,99,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,99,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,101,1,9,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,2,9,4,9,99])
 
 (defn opcode [instruction] (mod instruction 100))
 (defn parameter-mode [instruction index] (rem (quot instruction (expt 10 (+ index 2))) 10))
 (defn operand-value [operand mode program] (if (= mode 0) (program operand) operand))
-
-(defn halt [program] (program 0))
 
 (defn compute-and-set
   [program, ip]
@@ -23,16 +22,15 @@
     [(assoc program target value-to-set) (+ ip 4)]))
 
 (defn read-input
-  [program, ip, sys-id]
+  [program, ip, value]
   (let [[_ target] (subvec program ip)]
-    [(assoc program target sys-id) (+ ip 2)]))
+    [(assoc program target value) (+ ip 2)]))
 
 (defn do-output
   [program, ip]
   (let [[instruction op] (subvec program ip)
         value (operand-value op (parameter-mode instruction 0) program)]
-    (println ">" value)
-    [program (+ ip 2)]))
+    value))
 
 (defn jmp
   [program, ip]
@@ -50,15 +48,25 @@
   (loop [state [p0 ip0] inputs inputs0]
     (let [[program ip] state]
       (case (opcode (program ip))
-        99 (halt program)
         1 (recur (compute-and-set program ip) inputs)
         2 (recur (compute-and-set program ip) inputs)
         3 (recur (read-input program ip (first inputs)) (rest inputs))
-        4 (recur (do-output program ip) inputs)
+        4 (do-output program ip)
         5 (recur (jmp program ip) inputs)
         6 (recur (jmp program ip) inputs)
         7 (recur (compute-and-set program ip) inputs)
         8 (recur (compute-and-set program ip) inputs)))))
 
+(defn run-series
+  [phase-settings]
+  (reduce
+   (fn [signal phase-setting] (run input 0 [phase-setting signal]))
+   0
+   phase-settings))
+
+(def part1
+  (apply max (->> (combo/permutations (range 5))
+                  (map run-series))))
+
 (defn -main [& args]
-  (run input 0 [0 4]))
+  (println part1))

@@ -5,6 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [
     [org.clojure/clojure "1.10.0"]
+    [org.clojure/math.combinatorics "0.1.6"]
     [org.clojure/math.numeric-tower "0.0.4"]]
   :main ^:skip-aot advent-2019.day07
   :target-path "target/%s"
