@@ -43,32 +43,31 @@
 
 (defn run
   "Runs the program until it needs more input or halts"
-  [p0, ip0, inputs0]
-  (loop [state [p0 ip0] inputs inputs0 output nil]
+  [state0, input0]
+  (loop [state state0 input input0 output nil]
     (let [[program ip] state]
       (case (opcode (nth program ip))
-        99 [nil nil output]
-        1 (recur (compute-and-set program ip) inputs output)
-        2 (recur (compute-and-set program ip) inputs output)
-        3 (if (empty? inputs)
-            [program ip output]
-            (recur (read-input program ip (first inputs)) (rest inputs) output))
+        99 [nil output]
+        1 (recur (compute-and-set program ip) input output)
+        2 (recur (compute-and-set program ip) input output)
+        3 (if (nil? input) [[program ip] output]
+              (recur (read-input program ip input) nil output))
         4 (let [[new-state output] (do-output program ip)]
-            (recur new-state inputs output))
-        5 (recur (jmp program ip) inputs output)
-        6 (recur (jmp program ip) inputs output)
-        7 (recur (compute-and-set program ip) inputs output)
-        8 (recur (compute-and-set program ip) inputs output)))))
+            (recur new-state input output))
+        5 (recur (jmp program ip) input output)
+        6 (recur (jmp program ip) input output)
+        7 (recur (compute-and-set program ip) input output)
+        8 (recur (compute-and-set program ip) input output)))))
 
 (defn run-loop
+  "Runs the program on looped amplifiers until halted"
   [phase-settings]
-  (loop [signal 0 states (map (fn [setting] [input 0 [setting]]) phase-settings)]
+  (loop [signal 0
+         states (map (fn [setting] (first (run [input 0] setting))) phase-settings)]
     (if (empty? states) signal
-        (let [[program0 ip0 inputs] (first states)
-              [program ip output] (run program0 ip0 (concat inputs [signal]))
-              new-states (if (nil? program)
-                           (rest states)
-                           (concat (rest states) [[program ip []]]))]
+        (let [state0 (first states)
+              [state output] (run state0 signal)
+              new-states (if (nil? state) (rest states) (conj (rest states) state))]
           (recur output new-states)))))
 
 (defn max-signal
