@@ -30,7 +30,7 @@
   [program, ip]
   (let [[instruction op] (subvec program ip)
         value (operand-value op (parameter-mode instruction 0) program)]
-    value))
+    [[program (+ ip 2)] value]))
 
 (defn jmp
   [program, ip]
@@ -43,24 +43,30 @@
     [program (if do-jump value2 (+ ip 3))]))
 
 (defn run
-  "Runs the program to completion"
+  "Runs the program until it needs more input or halts"
   [p0, ip0, inputs0]
-  (loop [state [p0 ip0] inputs inputs0]
+  (loop [state [p0 ip0] inputs inputs0 output nil]
     (let [[program ip] state]
       (case (opcode (program ip))
-        1 (recur (compute-and-set program ip) inputs)
-        2 (recur (compute-and-set program ip) inputs)
-        3 (recur (read-input program ip (first inputs)) (rest inputs))
-        4 (do-output program ip)
-        5 (recur (jmp program ip) inputs)
-        6 (recur (jmp program ip) inputs)
-        7 (recur (compute-and-set program ip) inputs)
-        8 (recur (compute-and-set program ip) inputs)))))
+        99 [nil nil output]
+        1 (recur (compute-and-set program ip) inputs output)
+        2 (recur (compute-and-set program ip) inputs output)
+        3 (if (empty? inputs)
+            [program ip output]
+            (recur (read-input program ip (first inputs)) (rest inputs) output))
+        4 (let [[new-state output] (do-output program ip)]
+            (recur new-state inputs output))
+        5 (recur (jmp program ip) inputs output)
+        6 (recur (jmp program ip) inputs output)
+        7 (recur (compute-and-set program ip) inputs output)
+        8 (recur (compute-and-set program ip) inputs output)))))
 
 (defn run-series
   [phase-settings]
   (reduce
-   (fn [signal phase-setting] (run input 0 [phase-setting signal]))
+   (fn [signal phase-setting] 
+      (let [[program ip output] (run input 0 [phase-setting signal])]
+        output))
    0
    phase-settings))
 
