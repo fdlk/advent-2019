@@ -5,19 +5,18 @@
 
 (def inputmap
   (->> input
-       (map-indexed (fn [index instruction] [(bigint index) (bigint instruction)]))
+       (map-indexed (fn [index instruction] [index instruction]))
        (reduce (fn [coll [k v]] (assoc coll k v)) {})))
 
-(defn opcode [instruction] (int (mod instruction 100)))
-(defn parameter-mode [instruction index] (int (rem (quot instruction (expt 10 (+ index 2))) 10)))
+(defn opcode [instruction] (mod instruction 100))
+(defn parameter-mode [instruction index] (rem (quot instruction (expt 10 (+ index 2))) 10))
 (defn target-value [target mode program]
-  (if (not= mode 2) target (+ target (program -1))))
+  (if (not= mode 2) target (+ target (program :rb))))
 (defn operand-value [operand mode program]
   (let [value (case mode
                 0 (program operand)
                 1 operand
-                2 (program (+ operand (program -1))))]
-      ; (println "operand-value" value mode operand (program -1) program )
+                2 (program (+ operand (program :rb))))]
       (if (nil? value) 0 value)))
 
 (defn compute-and-set
@@ -36,13 +35,12 @@
                        8 (if (= value1 value2) 1 0))]
     [(assoc program target-to-set value-to-set) (+ ip 4)]))
 
-(defn set-relative-base
+(defn adjust-relative-base
   [program, ip]
   (let [instruction (program ip)
         op (program (+ ip 1))
         value (operand-value op (parameter-mode instruction 0) program)]
-    (println "SRB " instruction op value)
-    [(assoc program -1 value) (+ ip 2)]))
+    [(assoc program :rb (+ value (program :rb))) (+ ip 2)]))
 
 (defn read-input
   [program, ip, value]
@@ -67,8 +65,8 @@
         value1 (operand-value op1 (parameter-mode instruction 0) program)
         value2 (operand-value op2 (parameter-mode instruction 1) program)
         do-jump (case (opcode instruction)
-                  5 (not= value1 0N)
-                  6 (= value1 0N))]
+                  5 (not= value1 0)
+                  6 (= value1 0))]
     [program (if do-jump value2 (+ ip 3))]))
 
 (defn run
@@ -76,7 +74,6 @@
   [state0, input0]
   (loop [state state0 input input0 output nil]
     (let [[program ip] state]
-      (println "run" ip (program ip))
       (case (opcode (program ip))
         99 [nil output]
         1 (recur (compute-and-set program ip) input output)
@@ -89,8 +86,9 @@
         6 (recur (jmp program ip) input output)
         7 (recur (compute-and-set program ip) input output)
         8 (recur (compute-and-set program ip) input output)
-        9 (recur (set-relative-base program ip) input output)))))
+        9 (recur (adjust-relative-base program ip) input output)))))
 
-(def part1 (second (run [inputmap 0N] 1N)))
+(def part1 (second (run [(assoc inputmap :rb 0) 0] 1)))
+(def part2 (second (run [(assoc inputmap :rb 0) 0] 2)))
 
-(defn -main [& args] (println "day09" ))
+(defn -main [& args] (println "day09" part1 part2))
