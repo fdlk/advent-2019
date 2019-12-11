@@ -18,7 +18,7 @@
                 0 (program operand)
                 1 operand
                 2 (program (+ operand (program :rb))))]
-    (if (nil? value) 0 value)))
+    (or value 0)))
 
 (defn compute-and-set
   [program, ip]
