@@ -1,8 +1,5 @@
 (ns advent-2019.day10
-  (:require [clojure.math.numeric-tower :refer [expt]])
-  (:require [advent-2019.core :refer [lines]])
-  (:require [clojure.string :refer [join]])
-  (:require [clojure.set :refer [difference]]))
+  (:require [advent-2019.core :refer [lines, manhattan]]))
 
 (def input (->> "day10.txt"
                 (lines)
@@ -15,52 +12,24 @@
              :when (= (get-in input [y x]) \#)]
          [x y])))
 
-(defn inner-product
-  "Determines the inner product of two vectors"
-  [[xa ya] [xb yb]]
-  (+ (* xa xb) (* ya yb)))
+(defn angle
+  "The angle of vector from x0 y0 to x1 y1, range is [-Pi,Pi), cutoff when the vector points up, i.e. (0,-1), angle increasing clockwise"
+  [[x0 y0] [x1 y1]] (- (Math/atan2 (- x1 x0) (- y1 y0))))
 
-(defn codirectional
-  "Determines if two vectors are codirectional and aligned"
-  [a b]
-  (and
-   (pos-int? (inner-product a b))
-   (= (expt (inner-product a b) 2)
-      (* (inner-product a a)
-         (inner-product b b)))))
+(defn number-of-visible-asteroids [a]
+  (->> (disj asteroids a)
+       (map (partial angle a))
+       (distinct)
+       (count)))
 
-(defn obstructs
-  "Determines if b obstructs a's view of c"
-  [a b c]
-  (let [ab (map - b a) ac (map - c a)]
-    (and
-     (codirectional ab ac)
-     (< (inner-product ab ab) (inner-product ac ac)))))
-
-(defn can-see-from
-  "Determines if asteroid a can be seen from b"
-  [a c]
-  (not-any?
-   (fn [b] (obstructs a b c))
-   (difference asteroids #{a c})))
-
-(defn visible-asteroids
-  "The asteroids visible from a"
-  [a]
-  (filter (partial can-see-from a) (disj asteroids a)))
-
-(defn number-of-visible-asteroids
-  "The number of asteroids visible from a"
-  [a]
-  (count (visible-asteroids a)))
-
-(def part1 (apply max-key first (map (fn [a] [(number-of-visible-asteroids a) a]) asteroids)))
+(def base (apply max-key number-of-visible-asteroids asteroids))
+(def part1  (number-of-visible-asteroids base))
 
 (def part2
-  (let [[_ [x0 y0]] part1]
-    (nth (sort-by
-          (fn [[x y]] (- (Math/atan2  (- x x0) (- y y0))))
-          (visible-asteroids [x0 y0]))
-         (dec 200))))
+  (let [others (disj asteroids base)
+        groups (group-by (partial angle base) others)
+        sorted-groups (sort-by first groups)
+        group (second (nth sorted-groups (dec 200)))]
+    (apply min-key (partial manhattan base) group)))
 
 (defn -main [& args] (println part1 part2))
