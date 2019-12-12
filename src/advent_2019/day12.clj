@@ -1,36 +1,25 @@
 (ns advent-2019.day12
-  (:require [clojure.math.combinatorics :refer [combinations]]))
+  (:require [clojure.math.combinatorics :refer [combinations]])
+  (:require [advent-2019.core :refer [lcm]]))
 
-(def x0s [-4 -11 2 7])
-(def y0s [3 -10 2 -1])
-(def z0s [15 13 18 0])
-
-; (def x0s [-8 5 2 9])
-; (def y0s [-10 5 -7 -8])
-; (def z0s [0 10 3 -3])
-
-(defn updated-velocity
-  "Updated velocity with gravity from other object"
-  [position position-other velocity]
-  (case (compare position position-other)
-    0 velocity
-    1 (dec velocity)
-    -1 (inc velocity)))
+(def x0s [[-4 -11 2 7] [0 0 0 0]])
+(def y0s [[3 -10 2 -1] [0 0 0 0]])
+(def z0s [[15 13 18 0] [0 0 0 0]])
 
 (defn apply-gravity
   [positions velocities]
-  (map-indexed
-   (fn [index current-velocity]
-     (reduce
-      (fn [velocity other-index] (updated-velocity (positions index) (positions other-index) velocity))
-      current-velocity
-      (filter #(not= % index) (range 4))))
-   velocities))
+  (map
+   (fn [position velocity]
+     (->> positions
+          (map #(compare % position))
+          (reduce +)
+          (+ velocity)))
+   positions velocities))
 
 (defn step
   [[positions velocities]]
-  (let [new-velocities (vec (apply-gravity positions velocities))
-        new-positions (vec (map + positions new-velocities))]
+  (let [new-velocities (apply-gravity positions velocities)
+        new-positions (map + positions new-velocities)]
     [new-positions new-velocities]))
 
 (defn vec-energy
@@ -43,31 +32,26 @@
 
 (def part1
   (let [nsteps 1000
-        [xs vxs] (nth (iterate step [x0s [0 0 0 0]]) nsteps)
-        [ys vys] (nth (iterate step [y0s [0 0 0 0]]) nsteps)
-        [zs vzs] (nth (iterate step [z0s [0 0 0 0]]) nsteps)]
+        [xs vxs] (nth (iterate step x0s) nsteps)
+        [ys vys] (nth (iterate step y0s) nsteps)
+        [zs vzs] (nth (iterate step z0s) nsteps)]
     (->> (interleave xs ys zs vxs vys vzs)
-      (map #(Math/abs %))
-      (partition 3)
-      (partition 2)
-      (map state-energy)
-      (reduce +))))
+         (partition 3)
+         (partition 2)
+         (map state-energy)
+         (reduce +))))
 
-(defn gcd
-  [a b]
-  (if (zero? b)
-    a
-    (recur b, (mod a b))))
+(defn period
+  [state]
+  (inc (.indexOf
+        (->> state
+             (iterate step)
+             (rest))
+        state)))
 
-(defn lcm
-  [a b]
-  (/ (* a b) (gcd a b)))
-
-(def part2 
+(def part2
   (->> [x0s y0s z0s]
-    (map (fn [positions] [positions [0 0 0 0]]))
-    (map #(.indexOf (rest (iterate step %)) %))
-    (map inc)
-    (reduce lcm)))
+       (map period)
+       (reduce lcm)))
 
 (defn -main [& args] (println "day12" part1 part2))
