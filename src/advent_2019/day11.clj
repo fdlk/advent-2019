@@ -113,7 +113,7 @@
           new-facing (turn facing instruction)
           new-location (move location new-facing)]
       (if (nil? new-cpu) new-painted
-        (recur new-cpu new-painted new-facing new-location)))))
+          (recur new-cpu new-painted new-facing new-location)))))
 
 (defn draw
   [painted]
