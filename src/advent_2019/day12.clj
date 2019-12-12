@@ -31,7 +31,7 @@
   [[positions velocities]]
   (let [new-velocities (vec (apply-gravity positions velocities))
         new-positions (vec (map + positions new-velocities))]
-   [new-positions new-velocities]))
+    [new-positions new-velocities]))
 
 (defn vec-energy
   [vec]
@@ -46,7 +46,28 @@
         [xs vxs] (nth (iterate step [x0s [0 0 0 0]]) nsteps)
         [ys vys] (nth (iterate step [y0s [0 0 0 0]]) nsteps)
         [zs vzs] (nth (iterate step [z0s [0 0 0 0]]) nsteps)]
-    (reduce + (map state-energy (partition 2 (partition 3 (map #(Math/abs %) (interleave xs ys zs vxs vys vzs))))))
-  ))
+    (->> (interleave xs ys zs vxs vys vzs)
+      (map #(Math/abs %))
+      (partition 3)
+      (partition 2)
+      (map state-energy)
+      (reduce +))))
 
-(defn -main [& args] (println "day12" part1))
+(defn gcd
+  [a b]
+  (if (zero? b)
+    a
+    (recur b, (mod a b))))
+
+(defn lcm
+  [a b]
+  (/ (* a b) (gcd a b)))
+
+(def part2 
+  (->> [x0s y0s z0s]
+    (map (fn [positions] [positions [0 0 0 0]]))
+    (map #(.indexOf (rest (iterate step %)) %))
+    (map inc)
+    (reduce lcm)))
+
+(defn -main [& args] (println "day12" part1 part2))
