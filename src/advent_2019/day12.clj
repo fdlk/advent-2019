@@ -1,6 +1,4 @@
-(ns advent-2019.day12
-  (:require [clojure.math.combinatorics :refer [combinations]])
-  (:require [advent-2019.core :refer [lcm]]))
+(ns advent-2019.day12 (:require [advent-2019.core :refer [lcm]]))
 
 (def x0s [[-4 -11 2 7] [0 0 0 0]])
 (def y0s [[3 -10 2 -1] [0 0 0 0]])
@@ -25,6 +23,9 @@
 (defn vec-energy
   [vec]
   (reduce + (map #(Math/abs %) vec)))
+
+(vec-energy [2 3 4])
+
 
 (defn state-energy
   [[positions velocities]]
