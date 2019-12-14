@@ -36,6 +36,7 @@
   (assoc tuple :count (* times (:count tuple))))
 
 (defn multiply-reaction
+  "Describes a reaction executed multiple times"
   [times reaction]
   {:ingredients (map (partial multiply-count times) (:ingredients reaction))
    :product (multiply-count times (:product reaction))})
@@ -51,6 +52,7 @@
     (:ingredients (multiply-reaction number-of-times reaction))))
 
 (defn combine-ingredients
+  "Combines two ingredient lists by adding the counts for each ingredient"
   [i0 i1]
   (let [grouped (group-by :name (concat i0 i1))]
     (map #(hash-map :name (:name (first %))
@@ -58,28 +60,30 @@
 
 (defn needed-for-products-internal
   [products]
-  (apply union (map (fn [product] (set (map :name (:ingredients (reaction-map product)))) ) products)))
+  (apply union (map (fn [product] (set (map :name (:ingredients (reaction-map product))))) products)))
 
 (defn needed-for-products
+  "Determines all ingredients needed downstream to produce a set of products"
   [products]
   (loop [ingredients (needed-for-products-internal products)]
-      (let [updated (union ingredients (needed-for-products-internal ingredients))]
-        (if (= updated ingredients) ingredients (recur updated)))))
+    (let [updated (union ingredients (needed-for-products-internal ingredients))]
+      (if (= updated ingredients) ingredients (recur updated)))))
 
 (defn what-next
+  "Determines what to produce next. Picks a product that's no longer needed to produce any of the other products."
   [needed]
   (let [products (map :name needed)
         ingredients (needed-for-products products)
         not-needed (filter (fn [candidate] (not-any? #(= (:name candidate) %) ingredients)) needed)]
-    (filter #(not= "ORE" (:name %)) not-needed)))
+    (first not-needed)))
 
 (defn how-much-ore-for
+  "Determines how much ore is needed to produce a given amount of fuel"
   [count]
   (loop [needed (what-do-i-need {:count count, :name "FUEL"})]
-    (let [ingredient-list (what-next needed)]
-      (if (empty? ingredient-list) (:count (first needed))
-          (let [ingredient (first ingredient-list)
-                the-rest (filter (partial not= ingredient) needed)
+    (let [ingredient (what-next needed)]
+      (if (= "ORE" (:name ingredient)) (:count ingredient)
+          (let [the-rest (filter (partial not= ingredient) needed)
                 needed-for-ingredient (what-do-i-need ingredient)
                 combined (combine-ingredients needed-for-ingredient the-rest)]
             (recur combined))))))
@@ -89,13 +93,13 @@
 (defn bisect
   [f a0 b0]
   (loop [a a0 b b0]
-  (let [mid (quot (+ a b) 2)
-        comparison (f mid)]
-    (if (= mid a) a
-        (case comparison
-          0 mid
-          1 (recur a mid)
-          -1 (recur mid b))))))
+    (let [mid (quot (+ a b) 2)
+          comparison (f mid)]
+      (if (= mid a) a
+          (case comparison
+            0 mid
+            1 (recur a mid)
+            -1 (recur mid b))))))
 
 (def trillion 1000000000000N)
 
