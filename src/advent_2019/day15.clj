@@ -14,54 +14,40 @@
    [4 [(+ x 1) y]]]) ;east
 
 (defn neighbors
-  [location bot visited steps]
-  (for [direction (directions location)
+  [state]
+  (for [direction (directions (:loc state))
         :let [[input new-loc] direction
-              [new-bot [output]] (run bot input)]
-        :when (and
-               (not= output 0); no wall
-               (not (visited new-loc)))]; no backtracking
-    [new-loc new-bot output (inc steps)]))
+              [new-bot [output]] (run (:bot state) input)]
+        :when (not= output 0)]
+    {:loc new-loc,:bot new-bot,:output output, :steps (inc (:steps state))}))
 
-(def part1
+(defn breadth-first-search
+  [initial-state get-neighbors get-loc done?]
   (loop [visited #{}
-         todo (list [[0 0] [(assoc inputmap :rb 0) 0] 1 0])]
-    (let [[loc bot output steps] (first todo)
-          new-visited (conj visited loc)]
-      (if (= output 2) [steps loc bot]
-          (recur new-visited
-                 (if (visited loc) (rest todo)
-                     (concat (rest todo) (neighbors loc bot new-visited steps))))))))
-
-(def full-grid
-  (loop [visited #{} todo (list [[0 0] [(assoc inputmap :rb 0) 0] 1 0])]
+         max-depth 0
+         todo (list [0 initial-state])]
     (if (empty? todo)
-      visited
-      (let [[loc bot _ steps] (first todo)
+      [max-depth visited]
+      (let [[depth state] (first todo)
+            loc (get-loc state)
             new-visited (conj visited loc)]
-        (recur new-visited
-               (if (visited loc) (rest todo)
-                   (concat (rest todo) (neighbors loc bot new-visited steps))))))))
+        (if (done? state) [depth state]
+            (if (visited loc)
+              (recur new-visited max-depth (rest todo))
+              (recur new-visited (max max-depth depth) (concat (rest todo)
+                                                               (map (fn [x] [(inc depth) x]) (get-neighbors state))))))))))
+
+(def start-bot {:loc [0 0], :bot [(assoc inputmap :rb 0) 0], :output 1, :steps 0})
+(def part1 (breadth-first-search start-bot neighbors :loc #(= 2 (:output %))))
+(def full-grid (second (breadth-first-search (second part1) neighbors :loc (fn [_] false))))
 
 (defn grid-neighbors
-  [location visited steps]
-  (for [direction (directions location)
+  [state]
+  (for [direction (directions (:loc state))
         :let [[_ new-loc] direction]
-        :when (and
-               (full-grid location); no wall
-               (not (visited new-loc)))]; no backtracking
-    [new-loc (inc steps)]))
+        :when (full-grid (:loc state))]; no backtracking
+    (assoc state :loc new-loc :steps (inc (:steps state)))))
 
-(def part2
-  (let [[_ ox-loc] part1]
-    (loop [visited #{} todo (list [ox-loc 0]) max-depth 0]
-      (if (empty? todo)
-        (dec max-depth); TODO: why?!?!
-        (let [[loc steps] (first todo)
-              new-visited (conj visited loc)]
-          (if (visited loc)
-            (recur new-visited (rest todo) max-depth)
-            (recur new-visited (concat (rest todo)
-                                       (grid-neighbors loc new-visited steps)) steps)))))))
+(def part2 (breadth-first-search (second part1) grid-neighbors :loc (fn [_] false)))
 
-(defn -main [& _] (println "day15" (first part1) part2))
+(defn -main [& _] (println "day15" (first part1) (first part2)))
