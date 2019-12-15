@@ -8,7 +8,7 @@
     [criterium "0.4.5"]
     [org.clojure/math.combinatorics "0.1.6"]
     [org.clojure/math.numeric-tower "0.0.4"]]
-  :main ^:skip-aot advent-2019.day14
+  :main ^:skip-aot advent-2019.day15
   :target-path "target/%s"
   :plugins [[lein-cljfmt "0.6.6"]]
   :profiles {:uberjar {:aot :all}})
