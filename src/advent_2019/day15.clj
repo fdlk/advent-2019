@@ -95,18 +95,26 @@
    [4 [(+ x 1) y]]]) ;east
 
 (defn neighbors
-  [bot location]
+  [location bot visited steps]
   (for [direction (directions location)
         :let [[input new-loc] direction
-              [new-bot outputs] (run bot input)
-              output (first outputs)]
-        :when (not= output 1)]
-    [new-bot new-loc output]))
+              [new-bot [output]] (run bot input)]
+        :when (and
+               (not= output 0); no wall
+               (not (visited new-loc)))]; no backtracking
+    [new-loc new-bot output (inc steps)]))
 
-; (defn part1
-;   [start_v]
-;   (loop [visited #{} todo [start_v]]
-;     ))
-(def initial [(assoc inputmap :rb 0) 0])
+(def todo (java.util.ArrayDeque. [[[0 0] [(assoc inputmap :rb 0) 0] 1 0]]))
 
-(defn -main [& _] (println "day15" (neighbors initial [0 0])))
+(defn part1
+  []
+  (loop [visited #{}]
+    (let [[loc bot output steps] (.poll todo)
+          new-visited (conj visited loc)]
+      (if (= output 2) steps
+          (do (if (not (visited loc))
+                (let [to-check (neighbors loc bot new-visited steps)]
+                  (.addAll todo to-check)))
+              (recur new-visited))))))
+
+(defn -main [& _] (println "day15" (part1)))
