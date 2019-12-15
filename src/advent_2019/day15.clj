@@ -104,17 +104,45 @@
                (not (visited new-loc)))]; no backtracking
     [new-loc new-bot output (inc steps)]))
 
-(def todo (java.util.ArrayDeque. [[[0 0] [(assoc inputmap :rb 0) 0] 1 0]]))
-
-(defn part1
-  []
-  (loop [visited #{}]
-    (let [[loc bot output steps] (.poll todo)
+(def part1
+  (loop [visited #{}
+         todo (list [[0 0] [(assoc inputmap :rb 0) 0] 1 0])]
+    (let [[loc bot output steps] (first todo)
           new-visited (conj visited loc)]
-      (if (= output 2) steps
-          (do (if (not (visited loc))
-                (let [to-check (neighbors loc bot new-visited steps)]
-                  (.addAll todo to-check)))
-              (recur new-visited))))))
+      (if (= output 2) [steps loc bot]
+          (recur new-visited
+                 (if (visited loc) (rest todo)
+                     (concat (rest todo) (neighbors loc bot new-visited steps))))))))
 
-(defn -main [& _] (println "day15" (part1)))
+(def full-grid
+  (loop [visited #{} todo (list [[0 0] [(assoc inputmap :rb 0) 0] 1 0])]
+    (if (empty? todo)
+      visited
+      (let [[loc bot _ steps] (first todo)
+            new-visited (conj visited loc)]
+        (recur new-visited
+               (if (visited loc) (rest todo)
+                   (concat (rest todo) (neighbors loc bot new-visited steps))))))))
+
+(defn grid-neighbors
+  [location visited steps]
+  (for [direction (directions location)
+        :let [[_ new-loc] direction]
+        :when (and
+               (full-grid location); no wall
+               (not (visited new-loc)))]; no backtracking
+    [new-loc (inc steps)]))
+
+(def part2
+  (let [[_ ox-loc] part1]
+    (loop [visited #{} todo (list [ox-loc 0]) max-depth 0]
+      (if (empty? todo)
+        (dec max-depth); TODO: why?!?!
+        (let [[loc steps] (first todo)
+              new-visited (conj visited loc)]
+          (if (visited loc)
+            (recur new-visited (rest todo) max-depth)
+            (recur new-visited (concat (rest todo)
+                                       (grid-neighbors loc new-visited steps)) steps)))))))
+
+(defn -main [& _] (println "day15" (first part1) part2))
