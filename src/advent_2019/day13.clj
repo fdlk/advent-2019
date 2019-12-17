@@ -7,7 +7,7 @@
        (reduce (fn [coll [k v]] (assoc coll k v)) {})))
 
 (def part1 
-  (let [[_ output] (run [(assoc inputmap :rb 0) 0] nil)]
+  (let [[_ output] (run [(assoc inputmap :rb 0) 0] [])]
     (->> output
          (partition 3)
          (map #(nth % 2))
@@ -24,7 +24,7 @@
 
 (defn step
   [pong input]
-  (let [[new-pong output] (run pong input)
+  (let [[new-pong output] (run pong [input])
         pixels (partition 3 output)
         paddle (first (find-elements pixels 3))
         ball (first (find-elements pixels 4))

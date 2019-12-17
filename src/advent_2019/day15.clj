@@ -17,7 +17,7 @@
   [state]
   (for [direction (directions (:loc state))
         :let [[input new-loc] direction
-              [new-bot [output]] (run (:bot state) input)]
+              [new-bot [output]] (run (:bot state) [input])]
         :when (not= output 0)]
     {:loc new-loc,:bot new-bot,:output output, :steps (inc (:steps state))}))
 

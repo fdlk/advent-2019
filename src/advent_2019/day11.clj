@@ -27,7 +27,7 @@
   [color]
   (loop [cpu [(assoc inputmap :rb 0) 0] painted {[0 0] color} facing :up location [0 0]]
     (let [color (or (painted location) 0)
-          [new-cpu [new-color instruction]] (run cpu color)
+          [new-cpu [new-color instruction]] (run cpu [color])
           new-painted (assoc painted location new-color)
           new-facing (turn facing instruction)
           new-location (move location new-facing)]

@@ -8,7 +8,7 @@
        (map-indexed (fn [index instruction] [index instruction]))
        (reduce (fn [coll [k v]] (assoc coll k v)) {})))
 
-(def part1 (second (run [(assoc inputmap :rb 0) 0] 1)))
-(def part2 (second (run [(assoc inputmap :rb 0) 0] 2)))
+(def part1 (second (run [(assoc inputmap :rb 0) 0] [1])))
+(def part2 (second (run [(assoc inputmap :rb 0) 0] [2])))
 
 (defn -main [& _] (println "day09" part1 part2))
