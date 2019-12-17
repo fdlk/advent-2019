@@ -38,10 +38,8 @@
 
 (def part1 (reduce + (map (partial apply *) intersections)))
 
-(def solution (map int "B,A,B,C,A,C,B,A,B,C\nL6,L6,R10\nR10,L8,R10,R4\nL6,R12,R12,R10\nn\n"))
-
-; 3182 is too low
+(def solution (map int "B,A,B,C,A,C,B,A,B,C\nL,6,L,6,R,10\nR,10,L,8,R,10,R,4\nL,6,R,12,R,12,R,10\nn\n"))
 
 (def part2 (run [(assoc inputmap :rb 0 0 2) 0] solution))
 
-(defn -main [& _] (println part2))
+(defn -main [& _] (println part1 (last (second part2))))
