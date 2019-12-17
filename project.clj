@@ -11,4 +11,5 @@
   :main ^:skip-aot advent-2019.day16
   :target-path "target/%s"
   :plugins [[lein-cljfmt "0.6.6"]]
+  ; :jvm-opts ["-Xmx16g"]
   :profiles {:uberjar {:aot :all}})
