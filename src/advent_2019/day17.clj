@@ -21,18 +21,16 @@
                             {}
                             (map-indexed (fn [x char] [[x y] char]) row)))
                          (split scaffolds #"\n"))))
-(defn directions
-  [[x y]]
-  [[1 [x (- y 1)]] ;north
-   [2 [x (+ y 1)]] ;south
-   [3 [(- x 1) y]] ;west
-   [4 [(+ x 1) y]]]) ;east
+
+(defn neighbors
+  [p]
+  (map (partial map + p) [[0 -1] [0 1] [-1 0] [1 0]]))
 
 (defn is-intersection
   [pos]
   (and
    (= \# (get scaffold-map pos))
-   (every? #(= \# (get scaffold-map % \.)) (map second (directions pos)))))
+   (every? #(= \# (get scaffold-map % \.)) (neighbors pos))))
 
 (def intersections (filter is-intersection (keys scaffold-map)))
 
@@ -40,6 +38,6 @@
 
 (def solution (map int "B,A,B,C,A,C,B,A,B,C\nL,6,L,6,R,10\nR,10,L,8,R,10,R,4\nL,6,R,12,R,12,R,10\nn\n"))
 
-(def part2 (run [(assoc inputmap :rb 0 0 2) 0] solution))
+(def part2 (last (second (run [(assoc inputmap :rb 0 0 2) 0] solution))))
 
-(defn -main [& _] (println part1 (last (second part2))))
+(defn -main [& _] (println part1 part2))
