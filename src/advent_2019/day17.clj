@@ -8,7 +8,11 @@
        (reduce (fn [coll [k v]] (assoc coll k v)) {})))
 
 (def bot (run [(assoc inputmap :rb 0) 0] nil))
-(def scaffolds (join (map #(char %) (second bot))))
+(defn print-map
+  [output]
+  (join (map #(char %) output)))
+  
+(def scaffolds (print-map (second bot)))
 (def scaffold-map (into {}
                         (map-indexed
                          (fn [y row]
@@ -32,7 +36,12 @@
 
 (def intersections (filter is-intersection (keys scaffold-map)))
 
-; 9102 is too high
 (def part1 (reduce + (map (partial apply *) intersections)))
 
-(defn -main [& _] (println part1))
+(def solution (map int "B,A,B,C,A,C,B,A,B,C\nL6,L6,R10\nR10,L8,R10,R4\nL6,R12,R12,R10\nn\n"))
+
+; 3182 is too low
+
+(def part2 (run [(assoc inputmap :rb 0 0 2) 0] solution))
+
+(defn -main [& _] (println part2))

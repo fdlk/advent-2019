@@ -64,18 +64,18 @@
 (defn run
   "Runs the program until it needs more input or halts"
   [state0, input0]
-  (loop [state state0 input input0 output []]
+  (loop [state state0 inputs input0 output []]
     (let [[program ip] state]
       (case (opcode (program ip))
         99 [nil output]
-        1 (recur (compute-and-set program ip) input output)
-        2 (recur (compute-and-set program ip) input output)
-        3 (if (nil? input) [[program ip] output]
-              (recur (read-input program ip input) nil output))
+        1 (recur (compute-and-set program ip) inputs output)
+        2 (recur (compute-and-set program ip) inputs output)
+        3 (if (empty? inputs) [[program ip] output]
+              (recur (read-input program ip (first inputs)) (rest inputs) output))
         4 (let [[new-state new-output] (do-output program ip)]
-            (recur new-state input (conj output new-output)))
-        5 (recur (jmp program ip) input output)
-        6 (recur (jmp program ip) input output)
-        7 (recur (compute-and-set program ip) input output)
-        8 (recur (compute-and-set program ip) input output)
-        9 (recur (adjust-relative-base program ip) input output)))))
+            (recur new-state inputs (conj output new-output)))
+        5 (recur (jmp program ip) inputs output)
+        6 (recur (jmp program ip) inputs output)
+        7 (recur (compute-and-set program ip) inputs output)
+        8 (recur (compute-and-set program ip) inputs output)
+        9 (recur (adjust-relative-base program ip) inputs output)))))
