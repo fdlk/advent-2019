@@ -1,5 +1,5 @@
 (ns advent-2019.day18
-  (:require [advent-2019.core :refer [lines]])
+  (:require [advent-2019.core :refer [lines manhattan]])
   (:require [clojure.data.priority-map :refer [priority-map]]))
 
 (def maze (lines "day18.txt"))
@@ -20,25 +20,24 @@
     [x y (if key-found (conj keys map-char) keys)]))
 
 ; source: http://clj-me.cgrand.net/2010/09/04/a-in-clojure/
+; adapted for this problem
 (defn A*
   "Finds a path between start and goal inside the graph described by edges
   (a map of edge to distance); estimate is an heuristic for the actual
   distance. Accepts a named option: :monotonic (default to true).
   Returns the path if found or nil."
-  [edges estimate start goal & {mono :monotonic :or {mono true}}]
-  (let [f (memoize #(estimate % goal)) ; unsure the memoization is worthy
-        neighbours (reduce (fn [m [a b]] (assoc m a (conj (m a #{}) b)))
-                           {} (keys edges))]
+  [neighbor-fn estimate start are-we-done & {mono :monotonic :or {mono true}}]
+  (let [f (memoize #(estimate %))] ; unsure the memoization is worthy
     (loop [q (priority-map start (f start))
            preds {}
            shortest {start 0}
            done #{}]
       (when-let [[x hx] (peek q)]
-        (if (= goal x)
-          (reverse (take-while identity (iterate preds goal)))
+        (if (are-we-done x)
+          (reverse (take-while identity (iterate preds x)))
           (let [dx (- hx (f x))
-                bn (for [n (remove done (neighbours x))
-                         :let [hn (+ dx (edges [x n]) (f n))
+                bn (for [n (remove done (neighbor-fn x))
+                         :let [hn (+ dx 1 (f n))
                                sn (shortest n Double/POSITIVE_INFINITY)]
                          :when (< hn sn)]
                      [n hn])]
@@ -47,4 +46,31 @@
                    (into shortest bn)
                    (if mono (conj done x) done))))))))
 
-(defn -main [& _] (println "day18"))
+(def keys-in-maze
+  (for [y (range (count maze))
+        x (range (count (first maze)))
+        :let [character (get-in maze [y x])]
+        :when (Character/isLowerCase character)]
+    [x y character]))
+
+(defn collected-all-keys
+  [[_ _ found-keys]]
+  (>=(count found-keys) (count keys-in-maze)))
+
+(defn heuristic
+  [[x y keys-found]]
+  (->> keys-in-maze
+       (filter (fn [[_ _ character]] (not (keys-found character))))
+       (map (fn [[xkey ykey _]] (manhattan [x y] [xkey ykey])))
+       (reduce min 0)))
+
+(def start-node
+  (first (for [y (range (count maze))
+        x (range (count (first maze)))
+        :let [character (get-in maze [y x])]
+        :when (= character \@)]
+    [x y #{}])))
+
+(defn part1 [] (A* neighbors heuristic start-node collected-all-keys))
+
+(defn -main [& _] (println "day18" (dec (count (part1)))))
