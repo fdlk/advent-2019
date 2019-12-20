@@ -1,5 +1,5 @@
 (ns advent-2019.day20
-  (:require [advent-2019.core :refer [lines manhattan grid-neighbors A*]])
+  (:require [advent-2019.core :refer [lines grid-neighbors A*]])
   (:require [clojure.string :refer [join]]))
 
 (def maze (lines "day20.txt"))
@@ -24,13 +24,15 @@
 
 (def portals-grouped (group-by first portals))
 
-(def x-min (- (count (first maze)) 4))
-(def y-min (- (count maze) 4))
+(def mazey-coords (map first (filter (fn [x] (#{\. \#} (val x))) maze-map)))
+(def mazey-xs (map first mazey-coords))
+(def mazey-ys (map second mazey-coords))
+(def outer-x #{(reduce min mazey-xs) (reduce max mazey-xs)})
+(def outer-y #{(reduce min mazey-ys) (reduce max mazey-ys)})
 
 (defn is-outer-ring
   [[x y]]
-  (or (or (< x 4) (> x x-min))
-      (or (< y 4) (> y y-min))))
+  (or (outer-x x) (outer-y y)))
 
 (defn hop-through
   "hops through a portal"
@@ -57,7 +59,7 @@
 
 (def start (get-in portals-grouped ["AA" 0 1]))
 (def finish (get-in portals-grouped ["ZZ" 0 1]))
-(def part1 (A* (partial neighbors 1) (constantly 0) [start 0] #(= % [finish 0])))
-(def part2 (A* (partial neighbors 2) heuristic [start 0] #(= % [finish 0])))
+(defn part1 [] (A* (partial neighbors 1) (constantly 0) [start 0] #{[finish 0]}))
+(defn part2 [] (A* (partial neighbors 2) heuristic [start 0] #{[finish 0]}))
 
-(defn -main [& _] (println "day20" (dec (count part1)) (dec (count part2))))
+(defn -main [& _] (println "day20" (dec (count (part1))) (dec (count (part2)))))
