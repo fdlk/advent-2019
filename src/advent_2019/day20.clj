@@ -9,49 +9,55 @@
         (for [y (range (count maze))
               x (range (count (first maze)))
               :let [character (get-in maze [y x])]
-              :when (not= character \space )]
+              :when (not= character \space)]
           [[x y] character])))
 
 (def portals
   (for [[[x y] character] (seq maze-map)
-              :when (not (#{\# \.} character))
-              entrance (grid-neighbors [x y])
-              :when (= (maze-map entrance) \.)
-              :let [direction (map - [x y] entrance)
-                    other-char-loc (map + [x y] direction)
-                    other-char (maze-map other-char-loc)]]
-          [(join (sort [character other-char])) entrance]))
+        :when (not (#{\# \.} character))
+        entrance (grid-neighbors [x y])
+        :when (= (maze-map entrance) \.)
+        :let [direction (map - [x y] entrance)
+              other-char-loc (map + [x y] direction)
+              other-char (maze-map other-char-loc)]]
+    [(join (sort [character other-char])) entrance]))
 
 (def portals-grouped (group-by first portals))
 
+(def x-min (- (count (first maze)) 4))
+(def y-min (- (count maze) 4))
+
+(defn is-outer-ring
+  [[x y]]
+  (or (or (< x 4) (> x x-min))
+      (or (< y 4) (> y y-min))))
+
 (defn hop-through
   "hops through a portal"
-  [location]
+  [location level]
   (let [portal-name (first (first (filter #(= location (second %)) portals)))
         candidates (portals-grouped portal-name)
-        exit (first (filter #(not= location (second %)) candidates))]
-    (second exit)))
+        exit (first (filter #(not= location (second %)) candidates))
+        new-level (if (is-outer-ring location) (dec level) (inc level))]
+    [(second exit) new-level]))
 
 (defn neighbors
-  [location]
+  [part [location level]]
   (for [candidate (grid-neighbors location)
         :let [glyph (maze-map candidate)]
         :when (not= glyph \#)
         :let [result (if (= \. glyph)
-                       candidate
-                       (hop-through location))]
-        :when (not= result nil)]
+                       [candidate level]
+                       (hop-through location level))]
+        :when (not= (first result) nil)
+        :when (or (= part 1) (not (neg-int? (second result))))]
     result))
 
-; (defn heuristic
-;   [[x y keys-found]]
-;   (->> keys-in-maze
-;        (filter (fn [[_ _ character]] (not (keys-found character))))
-;        (map (fn [[xkey ykey _]] (manhattan [x y] [xkey ykey])))
-;        (reduce min 0)))
+(defn heuristic [[_ level]] (* 30 level))
 
 (def start (get-in portals-grouped ["AA" 0 1]))
 (def finish (get-in portals-grouped ["ZZ" 0 1]))
-(def part1 (A* neighbors (constantly 0) start #{finish}))
+(def part1 (A* (partial neighbors 1) (constantly 0) [start 0] #(= % [finish 0])))
+(def part2 (A* (partial neighbors 2) heuristic [start 0] #(= % [finish 0])))
 
-(defn -main [& _] (println "day20" (dec (count part1))))
+(defn -main [& _] (println "day20" (dec (count part1)) (dec (count part2))))
