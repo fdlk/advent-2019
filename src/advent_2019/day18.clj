@@ -1,13 +1,10 @@
 (ns advent-2019.day18
-  (:require [advent-2019.core :refer [lines manhattan A*]])
-  ; (:require [clojure.set :refer [difference]])
-  (:require [clojure.data.priority-map :refer [priority-map]]))
+  (:require [advent-2019.core :refer [lines manhattan A* grid-neighbors]])
+  (:require [clojure.set :refer [map-invert difference union]])
+  (:require [clojure.data.priority-map :refer [priority-map]])
+  (:require [clojure.math.numeric-tower :refer [ceil]]))
 
 (def maze (lines "day18-2.txt"))
-
-(defn grid-neighbors
-  [p]
-  (map (partial map + p) [[0 -1] [0 1] [-1 0] [1 0]]))
 
 (def maze-map
   (into {}
@@ -16,84 +13,129 @@
               :let [character (get-in maze [y x])]]
           {[x y] character})))
 
-(def quadrants [[(range 0 4) (range 0 4)]
-                [(range 0 4) (range 4 8)]
-                [(range 4 8) (range 0 4)]
-                [(range 4 8) (range 4 8)]])
+(def lookup-maze (map-invert maze-map))
 
-(defn keys-in-range
-  [[xrange yrange]]
-  (for [x xrange
-        y yrange
-        :let [character (maze-map [x y])]
-        :when (Character/isLowerCase character)]
-    [[x y] character]))
+(def maze-size (count maze))
+(def quadrant-size (int (ceil (/ maze-size 2))))
+(def lower-range (range 0 quadrant-size))
+(def upper-range (range (dec quadrant-size) maze-size))
 
-(def keys-per-quadrant
-  (map keys-in-range quadrants))
-
-(def keys-set-per-quadrant
-  (vec (->> keys-per-quadrant
-       (map (partial map second))
-       (map (partial apply hash-set)))))
-
-(defn has-key-left
-  [quadrant-index keys-found]
-  (some? (some #(not (keys-found %))
-   (nth keys-set-per-quadrant quadrant-index))))
-
-(defn neighbors
-  "Gives the neigboring states. A state consists of the positions of all bots, the keys aquired and the index of the bot who has initiative"
-  [[positions keys initiative]]
-  (if (= initiative -1)
-    (for [new-initiative (range 4)] [positions keys new-initiative])
-    (for [neighbor (grid-neighbors (nth positions initiative))
-          :let [[x y] neighbor
-                map-char (maze-map [x y])
-                key-found (Character/isLowerCase map-char)
-                keys-found (if key-found (conj keys map-char) keys)
-                new-positions (assoc positions initiative [x y])]
-          :when (or (#{\. \@} map-char)
-                    key-found
-                    (keys (Character/toLowerCase map-char)))
-          new-initiative (if key-found (range 4) [initiative])
-          :when (or (not key-found) (has-key-left new-initiative keys-found))  
-          ]
-      [new-positions keys-found new-initiative])))
-
-(def number-of-keys (count (keys-in-range [(range 8) (range 8)])))
-
-(defn collected-all-keys
-  [[_ found-keys _]]
-  (= (count found-keys) number-of-keys))
-
-(def memohattan (memoize #(manhattan % %2)))
-
-(defn distance-to-closest-key
-  [[positions keys-found _] quadrant-index]
-  (->> (nth keys-per-quadrant quadrant-index)
-       (filter (fn [state] (not (keys-found (second state)))))
-       (map (fn [state] (memohattan (nth positions quadrant-index) (first state))))
-       (#(if (empty? %) 0 (reduce min %)))))
-
-(defn heuristic
-  [[positions keys-found initiative]]
-  (println (second keys-found))
-  ; 0)
-  ; (reduce + (map (partial distance-to-closest-key state) (range 4))))
-  (if (= initiative -1) 0 (distance-to-closest-key [positions keys-found initiative] initiative)))
+(def quadrants [[lower-range lower-range]
+                [lower-range upper-range]
+                [upper-range lower-range]
+                [upper-range upper-range]])
 
 (def start-positions
   (vec (for [quadrant-index (range 4)
-        :let  [[xrange yrange] (nth quadrants quadrant-index)]
+             :let  [[xrange yrange] (nth quadrants quadrant-index)]
+             y yrange
+             x xrange
+             :let [character (maze-map [x y])]
+             :when (= character \@)]
+         [x y])))
+
+(defn is-key [glyph] (Character/isLowerCase glyph))
+(defn is-door [glyph] (Character/isUpperCase glyph))
+(defn is-wall [glyph] (= \# glyph))
+(defn is-accessible
+  [glyph keys-in-pocket]
+  (if (is-door glyph) 
+    (keys-in-pocket (Character/toLowerCase glyph))
+    (not (is-wall glyph))))
+
+(defn maze-neighbors
+  [keys-in-pocket position]
+  (let [pos-glyph (maze-map position)]
+    (if (and (is-key pos-glyph) (not (keys-in-pocket pos-glyph)))
+      [] ; We're standing on a newly found key, don't run further
+      (for [neighbor (grid-neighbors position)
+            :let [glyph (maze-map neighbor)]
+            :when (is-accessible glyph keys-in-pocket)]
+        neighbor))))
+
+(defn distance-to-closest-key
+  [key-locations position]
+  (reduce min (map (partial manhattan position) key-locations)))
+
+(defn new-key-found
+  [left-to-find position]
+  (let [glyph (maze-map position)
+        result (and (is-key glyph) (some? (left-to-find glyph)))]
+    result))
+
+(defn find-all-keys
+  [position keys-in-pocket keys-to-find]
+  (loop [found [] 
+         left-to-find keys-to-find]
+    (if (empty? left-to-find) found
+        (let [key-locations (map lookup-maze left-to-find)
+              path (A* (partial maze-neighbors keys-in-pocket)
+                       (partial distance-to-closest-key key-locations)
+                       position
+                       (partial new-key-found left-to-find))]
+          (if (nil? path)
+            found
+            (let [location (last path)
+                  glyph (maze-map location)
+                  new-found (conj found [glyph location (dec (count path))])
+                  new-to-find (disj left-to-find glyph)]
+              (recur new-found new-to-find)))))))
+
+(defn keys-in-quadrant
+  [[xrange yrange]]
+  (apply hash-set (for [x xrange
         y yrange
-        x xrange
-        :let [character (maze-map [x y])]
-        :when (= character \@)]
-    [x y])))
-  
-(def start-node [start-positions #{} -1])
+        :let [glyph (maze-map [x y])]
+        :when (is-key glyph)]
+    glyph)))
 
-(defn part2 [] (A* neighbors heuristic start-node collected-all-keys))
+(def keys-per-quadrant (map keys-in-quadrant quadrants))
 
-(defn -main [& _] (println "day18" (part2)))
+(defn key-neighbors
+  [[positions keys-in-pocketses]]
+  (for [quadrant (range 4)
+        :let [position (nth positions quadrant)
+              keys-in-pocket (nth keys-in-pocketses quadrant)
+              keys-in-this-quadrant (nth keys-per-quadrant quadrant)
+              keys-to-find (difference keys-in-this-quadrant keys-in-pocket)]
+        :when (seq keys-to-find)
+        found (find-all-keys position (apply union keys-in-pocketses) keys-to-find)]
+    (let [[glyph position length] found]
+      [[(assoc positions quadrant position)
+        (assoc keys-in-pocketses quadrant (conj keys-in-pocket glyph))] length])))
+
+(defn A*-weighted
+  "Finds a path between start and goal inside the graph described by edges
+  (a map of edge to distance); estimate is an heuristic for the actual
+  distance. Accepts a named option: :monotonic (default to true).
+  Returns the path if found or nil."
+  [neighbor-fn estimate start are-we-done & {mono :monotonic :or {mono true}}]
+  (let [f (memoize #(estimate %))] ; unsure the memoization is worthy
+    (loop [q (priority-map start (f start))
+           preds {}
+           shortest {start 0}
+           done #{}]
+      (when-let [[x hx] (peek q)]
+        (if (are-we-done x)
+          hx
+          (let [dx (- hx (f x))
+                bn (for [[n cost] (filter (complement done) (neighbor-fn x))
+                         :let [hn (+ dx cost (f n))
+                               sn (shortest n Double/POSITIVE_INFINITY)]
+                         :when (< hn sn)]
+                     [n hn])]
+            (recur (into (pop q) bn)
+                   (into preds (for [[n] bn] [n x]))
+                   (into shortest bn)
+                   (if mono (conj done x) done))))))))
+
+
+(def number-of-keys (count (filter is-key (keys lookup-maze))))
+
+(def part2 (A*-weighted 
+            key-neighbors
+            (constantly 0)
+            [start-positions [#{} #{} #{} #{}]]
+            #(= number-of-keys (reduce + (map count (second %))))))
+
+(defn -main [& _] (println "day18" part2))
