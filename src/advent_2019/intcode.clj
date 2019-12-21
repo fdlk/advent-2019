@@ -1,4 +1,5 @@
 (ns advent-2019.intcode
+  (:require [clojure.string :refer [join]])
   (:require [clojure.math.numeric-tower :refer [expt]]))
 
 (defn opcode [instruction] (mod instruction 100))
@@ -79,3 +80,7 @@
         7 (recur (compute-and-set program ip) inputs output)
         8 (recur (compute-and-set program ip) inputs output)
         9 (recur (adjust-relative-base program ip) inputs output)))))
+
+(defn print-ascii-output
+  [output]
+  (join (map #(char %) output)))
