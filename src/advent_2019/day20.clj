@@ -53,7 +53,7 @@
                        (hop-through location level))]
         :when (not= (first result) nil)
         :when (or (= part 1) (not (neg-int? (second result))))]
-    result))
+    [1 result]))
 
 (defn heuristic [[_ level]] (* 30 level))
 
@@ -62,4 +62,4 @@
 (defn part1 [] (A* (partial neighbors 1) (constantly 0) [start 0] #{[finish 0]}))
 (defn part2 [] (A* (partial neighbors 2) heuristic [start 0] #{[finish 0]}))
 
-(defn -main [& _] (println "day20" (dec (count (part1))) (dec (count (part2)))))
+(defn -main [& _] (println "day20" (first (part1)) (first (part2))))
