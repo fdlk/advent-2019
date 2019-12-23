@@ -15,48 +15,34 @@
           [:deal-increment (parse-int (second deal-match))]
           nil)))))
 
-(defn deal-stack 
-  [deck] 
-  (reverse deck))
+(defn deal-stack
+  [index]
+  (- (- deck-size 1) index))
 
-(defn cut 
-  [amount deck]
-  (if (>= amount 0)
-    (concat (drop amount deck) (take amount deck))
-    (cut (+ deck-size amount) deck)))
+(defn cut
+  [amount index]
+  (mod (+ deck-size index (- amount))
+       deck-size))
 
 (defn deal-with-increment
-  [increment deck]
-  (let [quotient (quot deck-size increment)
-        remainder (rem deck-size increment)
-        leftover (- increment remainder)]
-    (loop [to-deal deck
-           stacks (vec (repeat increment nil))
-           index 0]
-      (if (empty? to-deal)
-        (take deck-size (apply interleave stacks))
-        (let [deal-one-extra (< index remainder)
-              amount-to-deal (if deal-one-extra (inc quotient) quotient)
-              stack (take amount-to-deal to-deal)]
-          (recur (drop amount-to-deal to-deal) 
-                 (assoc stacks index (if (not deal-one-extra) (concat stack [nil]) stack))
-                 (rem (+ leftover index) increment)))))))
+  [increment index]
+  (mod (* increment index) deck-size))
 
 (defn shuffle-step
-  [deck technique]
+  [index technique]
   (case (first technique)
-    :deal-stack (deal-stack deck)
-    :cut (cut (second technique) deck)
-    :deal-increment (deal-with-increment (second technique) deck)))
+    :deal-stack (deal-stack index)
+    :cut (cut (second technique) index)
+    :deal-increment (deal-with-increment (second technique) index)))
 
 (defn shuffle-deck
-  [deck techniques]
-  (reduce shuffle-step deck techniques))
+  [index techniques]
+  (reduce shuffle-step index techniques))
 
 (def input (->> "day22.txt"
                 (lines)
                 (map parse)))
 
-(def part1 (.indexOf (shuffle-deck (range deck-size) input) 2019))
+(def part1 (shuffle-deck 2019 input))
 
 (defn -main [& _] (println "Day 22" part1))
