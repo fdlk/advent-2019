@@ -21,11 +21,28 @@
           new-nics (map first results)
           inputs (route-outputs (map second results))
           solution (get inputs 255)]
-      (println inputs)
       (if solution
-        solution
+        (second solution)
         (let [routed-outputs (reduce (fn [list [k v]] (assoc list k v)) (vec (repeat 50 [])) inputs)]
           (recur new-nics routed-outputs))))))
 
-; 37571 is too high
-(defn -main [& _] (println "day23" part1))
+(def part2
+  (loop [nics (map #(first (run [(assoc inputmap :rb 0) 0] [%])) (range 50))
+         inputs (repeat 50 [-1])
+         last-seen-by-nat nil
+         last-delivered-by-nat nil]
+    (let [results (map run nics inputs)
+          new-nics (map first results)
+          inputs (route-outputs (map second results))
+          routed-outputs (reduce
+                          (fn [list [k v]] (if (not= k 255) (assoc list k v) list))
+                          (vec (repeat 50 [-1]))
+                          inputs)
+          sent-to-nat (last (partition 2 (get inputs 255)))]
+      (if (every? #{[-1]} inputs)
+        (if (= (second last-seen-by-nat) last-delivered-by-nat)
+            last-delivered-by-nat
+            (recur new-nics (assoc routed-outputs 0 last-seen-by-nat) nil (second last-seen-by-nat)))
+        (recur new-nics routed-outputs (or sent-to-nat last-seen-by-nat) last-delivered-by-nat)))))
+
+(defn -main [& _] (println "day23" part1 part2))

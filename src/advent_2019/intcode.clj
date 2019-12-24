@@ -1,9 +1,8 @@
 (ns advent-2019.intcode
-  (:require [clojure.string :refer [join]])
-  (:require [clojure.math.numeric-tower :refer [expt]]))
+  (:require [clojure.string :refer [join]]))
 
 (defn opcode [instruction] (mod instruction 100))
-(defn parameter-mode [instruction index] (rem (quot instruction (expt 10 (+ index 2))) 10))
+(defn parameter-mode [instruction index] (rem (quot instruction (nth [100 1000 10000] index)) 10))
 (defn target-value [target mode program]
   (if (not= mode 2) target (+ target (program :rb))))
 (defn operand-value [operand mode program]
