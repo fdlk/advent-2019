@@ -1,13 +1,13 @@
 (ns advent-2019.day24
-  (:require [advent-2019.core :refer [lines grid-neighbors sum]])
-  (:require [clojure.string :refer [join]]))
+  (:require [advent-2019.core :refer [lines grid-neighbors sum]]))
 
 (def input (lines "day24.txt"))
 
 (def input-map (into {}
                      (for [y (range 5)
-                           x (range 5)]
-                       {[x y] (if (#{\#} (get (get input y) x)) 1 0)})))
+                           x (range 5)
+                           :let [bug-count (if (#{\#} (get-in input [y x])) 1 0)]]
+                       {[x y] bug-count})))
 
 (defn next-value
   [neighbor-fn state pos]
@@ -25,16 +25,6 @@
          (fn [pos] {pos (next-value neighbor-fn state pos)})
          (keys state))))
 
-(defn printable-tile
-  [tile]
-  (->> (for [y (range 5)
-             x (range 5)] [x y])
-       (map tile)
-       (map #(case % 1 \# 0 \.))
-       (partition 5)
-       (map join)
-       (join \newline)))
-
 (defn biodiversity-value
   [tile]
   (reduce
@@ -45,9 +35,6 @@
    0
    tile))
 
-(def biodiversities
-  (map biodiversity-value (iterate (partial next-state grid-neighbors) input-map)))
-
 (defn first-duplicate
   [coll]
   (reduce (fn [acc elt]
@@ -57,7 +44,10 @@
           #{}
           coll))
 
-(def part1 (first-duplicate biodiversities))
+(def part1 (->> input-map
+                (iterate (partial next-state grid-neighbors))
+                (map biodiversity-value)
+                (first-duplicate)))
 
 (def lower-level-neighbors
   {[2 1] [[0 0] [1 0] [2 0] [3 0] [4 0]]
@@ -102,7 +92,7 @@
 
 (defn number-of-bugs [state] (sum (vals state)))
 
-(def part2 (->> initial-state 
+(def part2 (->> initial-state
                 (iterate (partial next-state fractal-neighbors))
                 (drop 200)
                 (first)
