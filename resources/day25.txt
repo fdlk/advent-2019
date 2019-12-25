@@ -1,0 +1,40 @@
+south
+east
+take whirled peas
+west
+north
+north
+east
+take ornament
+north
+north
+take dark matter
+south
+south
+west
+west
+west
+take candy cane
+west
+west
+take tambourine
+east
+east
+east
+north
+take astrolabe
+east
+take hologram
+east
+take klein bottle
+west
+south
+west
+drop ornament
+drop klein bottle
+drop candy cane
+drop hologram
+drop astrolabe
+drop whirled peas
+drop tambourine
+drop dark matter
