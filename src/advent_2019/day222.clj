@@ -1,4 +1,4 @@
-(ns advent-2019.day22
+(ns advent-2019.day222
   (:require [advent-2019.core :refer [lines parse-int mul-inv mod-pow]]))
 
 (def deck-size 119315717514047N)
@@ -44,7 +44,7 @@
 
 ; Determine m and b for which the shuffle f(x) = mx + b mod deck-size
 (def b (shuffle-deck 0 (reverse input)))
-(def m (- (shuffle-deck 1 (reverse input)) b))
+(def m (+ deck-size (- (shuffle-deck 1 (reverse input)) b)))
 
 (defn nth-iteration
   "Determines the nth iteration of linear function f(x) = mx + b starting with x=x0
@@ -54,4 +54,3 @@
     (mod (+ (* inv-one-minus-m b)
             (* (mod-pow m n deck-size) (- x0 (* b inv-one-minus-m)))) deck-size)))
 
-(defn -main [& _] (println "Day 22" (nth-iteration b m 101741582076661N 2020)))
